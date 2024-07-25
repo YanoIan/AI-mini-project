@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Predictor</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'predictor/styles.css' %}">
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="bg-primary text-white text-center py-3">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <a class="navbar-brand" href="#">Price Predictor</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <!-- Add any additional links here -->
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <main class="container mt-5">
+        <section class="hero text-center mb-5">
+            <h1>Predict Food Prices </h1>
+        </section>
+        <section class="search">
+            <form method="post" id="prediction-form" action="{% url 'predict_price' %}" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" name="date" class="form-control" required>
+                    <div class="invalid-feedback">Please select a date.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="item_name">Food Item</label>
+                    <select name="item_name" id="item_name" class="form-control" required>
+                        {% for item in items %}
+                        <option value="{{ item }}">{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a food item.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loc_market_name">Location</label>
+                    <select name="loc_market_name" id="loc_market_name" class="form-control" required>
+                        {% for location in locations %}
+                        <option value="{{ location }}">{{ location }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a location.</div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">Predict price</button>
+            </form>
+            <div id="result" class="mt-4" style="display:none;">
+                <h3 id="predicted_price"></h3>
+                <button id="show_analytics_btn" class="btn btn-secondary">Check Price Trends</button>
+            </div>
+        </section>
+    </main>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Bootstrap form validation
+        (function() {
+            'use strict';
+            window.addEventListener('load', function() {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+
+        document.getElementById('prediction-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch("{% url 'predict_price' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.predicted_price) {
+                    document.getElementById('predicted_price').innerText = 'Predicted Price: ' + data.predicted_price;
+                    document.getElementById('result').style.display = 'block';
+                } else if (data.error) {
+                    document.getElementById('predicted_price').innerText = 'Error: ' + data.error;
+                    document.getElementById('result').style.display = 'block';
+                }
+            });
+        });
+
+        document.getElementById('show_analytics_btn').addEventListener('click', function() {
+            window.location.href = "{% url 'show_analytics' %}";
+        });
+    </script>
+</body>
+</html>

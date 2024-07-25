@@ -1,0 +1,60 @@
+<!-- predictor/templates/predictor/analytics.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Trends</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'predictor/styles.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="#">Home</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section class="analytics">
+            <h1>Price Trends</h1>
+            <canvas id="priceTrendsChart"></canvas>
+        </section>
+    </main>
+    <script>
+        // Fetch data from your view and render the chart
+        fetch('/get_analytics/')
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('priceTrendsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.dates,
+                        datasets: [{
+                            label: 'Price Trends',
+                            data: data.prices,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'month'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            });
+    </script>
+</body>
+</html>
